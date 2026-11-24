@@ -327,5 +327,151 @@ renderGoals();
 renderHabits();
 showClock();
 </script>
+ <style>
+.smart-planning {
+  background: #fff;
+  border: 1px solid #e8e0f5;
+  border-radius: 20px;
+  padding: 22px;
+  margin: 24px 0;
+  color: #383047;
+}
+.smart-planning h2 {
+  color: #765bb5;
+}
+.smart-planning label {
+  display: block;
+  margin: 16px 0 7px;
+  font-weight: 600;
+}
+.smart-planning input,
+.smart-planning select,
+.smart-planning textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ded5ed;
+  border-radius: 10px;
+  background: #faf9fd;
+  font: inherit;
+}
+.smart-planning textarea {
+  min-height: 100px;
+}
+.smart-planning button {
+  width: 100%;
+  margin-top: 18px;
+  padding: 13px;
+  border: 0;
+  border-radius: 12px;
+  background: #8f78c5;
+  color: white;
+  font-weight: 600;
+}
+#mindflow-plan-result {
+  margin-top: 20px;
+}
+.mf-plan-item {
+  background: #f5f1fc;
+  padding: 12px;
+  border-radius: 10px;
+  margin: 10px 0;
+}
+</style>
+
+<section class="smart-planning" id="smart-planning">
+  <h2>✦ Smart Planning</h2>
+  <p>Create a daily plan based on your available time and energy.</p>
+
+  <label for="mf-time">Available time (minutes)</label>
+  <input id="mf-time" type="number" min="15" max="1440" value="120">
+
+  <label for="mf-energy">Your energy level</label>
+  <select id="mf-energy">
+    <option value="high">High energy</option>
+    <option value="medium" selected>Medium energy</option>
+    <option value="low">Low energy</option>
+  </select>
+
+  <label for="mf-tasks">Your tasks (one per line)</label>
+  <textarea id="mf-tasks" placeholder="Study English&#10;Read a book&#10;Finish a project"></textarea>
+
+  <button type="button" id="mf-generate">Generate My Plan ✦</button>
+
+  <div id="mindflow-plan-result"></div>
+</section><script>
+(function () {
+  const button = document.getElementById("mf-generate");
+  if (!button) return;
+
+  button.addEventListener("click", function () {
+    const time = Number(document.getElementById("mf-time").value);
+    const energy = document.getElementById("mf-energy").value;
+    const tasks = document.getElementById("mf-tasks").value
+      .split("\n")
+      .map(task => task.trim())
+      .filter(Boolean);
+
+    const result = document.getElementById("mindflow-plan-result");
+    result.replaceChildren();
+
+    if (!Number.isFinite(time) || time < 15 || time > 1440) {
+      result.textContent = "Enter a time between 15 and 1440 minutes.";
+      return;
+    }
+
+    if (tasks.length === 0) {
+      result.textContent = "Please add at least one task.";
+      return;
+    }
+
+    const focus = energy === "high" ? 40 :
+                  energy === "medium" ? 30 : 20;
+    let remaining = time;
+    let count = 0;
+
+    const heading = document.createElement("h3");
+    heading.textContent = "Your daily plan ✦";
+    result.appendChild(heading);
+
+    tasks.forEach((task, index) => {
+      if (remaining < 10) return;
+
+      const duration = Math.min(focus, remaining);
+      const item = document.createElement("div");
+      item.className = "mf-plan-item";
+
+      const title = document.createElement("strong");
+      title.textContent = (index + 1) + ". " + task;
+
+      const detail = document.createElement("p");
+      detail.textContent = "Focus time: " + duration + " minutes";
+
+      item.appendChild(title);
+      item.appendChild(detail);
+      result.appendChild(item);
+
+      remaining -= duration;
+      count++;
+
+      if (remaining >= 5 && index < tasks.length - 1) {
+        const pause = document.createElement("p");
+        pause.textContent = "☕ Take a 5-minute break.";
+        result.appendChild(pause);
+        remaining -= 5;
+      }
+    });
+
+    if (count === 0) {
+      result.textContent = "Please add more available time.";
+      return;
+    }
+
+    const note = document.createElement("p");
+    note.textContent = "You have " + remaining + " minutes left.";
+    result.appendChild(note);
+  });
+})();
+</script> 
 </body>
 </html>
